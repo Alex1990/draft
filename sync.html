@@ -26,9 +26,11 @@
             position: relative;
         }
         .slidepicker-list {
+            position: absolute;
             list-style: none;
             margin: 0;
             padding: 0;
+            width: 100%;
         }
         .slidepicker-list li {
             font-size: 18px;
@@ -45,9 +47,9 @@
             top: 32px;
             width: 100%;
             height: 30px;
-            background-color: rgba(0,160,255,.1);
-            border-top: 1px solid #adf;
-            border-bottom: 1px solid #adf;
+            background-color: rgba(0,160,255,.05);
+            border-top: 1px solid #cef;
+            border-bottom: 1px solid #cdf;
         }
         .slidepicker-unit {
             position: absolute;
@@ -94,8 +96,69 @@
     <script>
         ;(function(win, undefined){
             var settings = {
-
+                number: 1,
+                defaultValue: '',
+                unitText: ''
             }
+
+            function SlidePicker(opts) {
+                this.wrapper = $('<div class="slidepicker-wrapper"></div>');
+            }
+
+            SlidePicker.prototype.init = function(opts){
+                opts = $.extend(settings, opts);
+
+                for (var i = 0; i < opts.number; i++) {
+                    this.pickers = slidepickerTpl({
+                        items: opts.items,
+                        defaultValue: opts.defaultValue,
+                        unitText: opts.unitText
+                    });
+                }
+
+                this.wrapper.append(this.pickers.join('\n'));
+            };
+
+            SlidePicker.prototype.open = function(properties, duration, easing, callback) {
+                if (arguments.length == 0) {
+                    this.$el.show();
+                } else {
+                    this.$el.animate.apply(this.$el, arguments);
+                }
+            };
+
+            SlidePicker.prototype.close = function(properties, duration, easing, callback) {
+                if (arguments.length == 0) {
+                    this.$el.hide();
+                } else {
+                    this.$el.animate.apply(this.$el, arguments);
+                }
+            };
+
+            function slidepickerTpl(data){
+                var html = '';
+
+                html += '<div class="slidepicker">' +
+                        '   <ul class="slidepicker-list">';
+
+                for (var i = 0, len = data.items.length; i < len; i++) {
+                    html += '<li';
+                    if (data.defaultValue === data.items[i]) {
+                        html += ' class="slidepicker-current"';
+                    }
+                    html += '>' + data.items[i] + '</li>';
+                }
+                html += '</ul>' +
+                        '<div class="slidepicker-current-frame"></div>';
+
+                html += '<div class="slidepicker-unit">' +
+                        data.unitText +
+                        '</div>';
+
+                return html;
+            }
+
+            win.SlidePicker = SlidePicker;
         })(window);
     </script>
 </body>
