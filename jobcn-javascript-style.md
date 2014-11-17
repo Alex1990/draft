@@ -55,7 +55,7 @@ function factorial(num) {
 
 ##花括号
 
-`if`/`else`/`for`/`while`/`try`语句的花括号/大括号不能省略。
+`if`/`else`语句只有一行时，花括号/大括号可省略。
 
 ##条件表达式
 
