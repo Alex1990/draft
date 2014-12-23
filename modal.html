@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        .hide {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div>
+            <button id="btn1" data-target="#modal-1">Open a custom modal</button>
+        </div>
+        <div id="modal-1" class="modal hide">
+            <div class="modal-header">
+                <h3>Modal title</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure the above settings?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-close">Cancel</button>
+                <button class="modal-save">Yes</button>
+            </div>
+        </div>
+    </div>
+    <div>
+        <button id="btn2">Use template</button>
+    </div>
+    <script src="http://libs.baidu.com/jquery/1.11.1/jquery.js"></script>
+    <script>
+        (function(global, factory) {
+            if (typeof define === 'function') {
+                if (define.amd) {
+                    define(['jquery'], function($) {
+                        return factory($);
+                    });
+                } else if (define.cmd) {
+                    define(function(require, exports, module) {
+                        module.exports = factory(require('jquery'));
+                    });
+                }
+            } else if (typeof module === 'object' && module && typeof exports === 'object') {
+                module.exports = factory(require('jquery'));
+            } else {
+                global.Modal = factory(global.jQuery);
+            }
+        }(this, function($){
+
+            var pluginName = 'jquery.modal';
+
+            var Modal = function(el, opts) {
+                this.$el = $(el);
+                this.opts = $.extend({}, Modal.defaults, opts);
+
+                this._name = pluginName;
+                this.init();
+            };
+
+            $.extend(Modal.prototype, {
+                init: function() {
+                    var $modal, modalHtml;
+                    var self = this;
+                    var opts = self.opts;
+                    var events = Modal.events;
+                    var target = self.$el.data('target');
+
+                    if (target) {
+                        if (!opts.modalTpl) {
+                            $modal = $(target);
+                        } else {
+                            opts.bodyTpl = $(target).html();
+                        }
+                    }
+
+                    if (!opts.modalTpl) {
+                        modalHtml = opts.modalTpl.replace('{{headerTpl}}', opts.headerTpl)
+                                                .replace('{{bodyTpl}}', opts.bodyTpl)
+                                                .replace(/{{ns}}/g, opts.namespace);
+
+                        $modal = $(modalHtml);
+                    }
+
+                    if (opts.url) {
+                        $modal.trigger(events.AJAX_SEND, [self]);
+
+                        $.when($.get(opts.url)).then(
+                            function() {
+                                var params = [self].concat($.makeArray(arguments));
+                                $modal.find('.' + opts.namespace + '-body').append(data);
+                                $modal.trigger(events.AJAX_SUCCESS, params);
+                                $modal.trigger(events.AJAX_COMPLETE, params);
+                            },
+                            function() {
+                                var params = [self].concat($.makeArray(arguments));
+                                $modal.trigger(events.AJAX_ERROR, params);
+                                $modal.trigger(events.AJAX_COMPLETE, params);
+                            }
+                        );
+                    }
+
+                    self.$el.click(function(e) {
+                        e.preventDefault();
+                        self.open();
+                    });
+
+                    $modal.on('click', '.' + opts.namespace + '-close', function() {
+                        self.close();
+                    });
+
+                    $modal.on('keydown', function(e) {
+                        if (e.which === 27) {
+                            self.close();
+                        }
+                    });
+
+                    self.$modal = $modal;
+
+                    self.setPosition();
+
+                    $(window).resize(function() {
+                        self.setPosition();
+                    });
+                },
+                open: function() {
+                    this.toggle('open');
+                },
+                close: function() {
+                    this.toggle('close');
+                },
+                destroy: function() {
+                    this.$el.off();
+                    this.$modal.remove();
+                },
+                setPosition: function() {
+                    var opts = this.opts;
+                    this.$modal.css({
+                        position: 'fixed',
+                        display: 'none',
+                        width: opts.width,
+                        height: opts.height,
+                    }).appendTo($(document.body));
+
+                    this.$modal.css({
+                        left: ($(window).width() - this.$modal.outerWidth()) / 2,
+                        top: ($(window).height() - this.$modal.outerHeight()) / 2
+                    });
+                },
+                toggle: function(toggleTo) {
+                    var self = this;
+                    var opts = self.opts;
+                    var events = self.events;
+                    var $modal = self.$modal;
+                    var effectFn = self.effectMap[opts.effect][toggleTo];
+
+                    if (opts.effect === 'none') {
+                        opts.openDuration = 0;
+                        opts.closeDuration = 0;
+                    }
+
+                    if (toggleTo === 'open') {
+                        $modal.trigger(events.BEFORE_OPEN, [self]);
+                        if (opts.onbeforeopen.call(self) !== false) {
+                            $modal[effectFn](opts.openDuration, function(){
+                                $modal.trigger(events.OPEN, [self]);
+                                opts.onopen.call(self);
+                            });
+                        }
+                    } else if (toggleTo === 'close') {
+                        $modal.trigger(events.BEFORE_CLOSE, [self]);
+                        if (opts.onbeforeclose.call(self) !== false) {
+                            $modal[effectFn](opts.closeDuration, function(){
+                                $modal.trigger(events.CLOSE, [self]);
+                                opts.onclose.call(self);
+                            });
+                        }
+                    }
+                },
+                effectMap: {
+                    none: {
+                        open: 'show',
+                        close: 'hide'
+                    },
+                    fade: {
+                        open: 'fadeIn',
+                        close: 'fadeOut'
+                    },
+                    slide: {
+                        open: 'slideDown',
+                        close: 'slideUp'
+                    }
+                }
+            });
+
+            Modal.defaults = {
+                namespace: 'modal',
+                effect: 'none',
+                openDuration: 250,
+                closeDuration: 150,
+                title: 'Title',
+                closeText: '&times;',
+                headerTpl: '<div class="{{ns}}-header"><h3 class="{{ns}}-title">{{title}}</h3><button class="{{ns}}-close">{{closeText}}</button>',
+                bodyTpl: '',
+                modalTpl: '<div class="{{ns}}">{{headerTpl}}{{bodyTpl}}</div>',
+                escapeClose: true,
+                width: null,
+                height: null,
+                url: null,
+                zIndex: 100,
+                onbeforeopen: $.noop,
+                onbeforeclose: $.noop,
+                onopen: $.noop,
+                onclose: $.noop
+            };
+
+            Modal.events = {
+                OPEN: 'modal:open',
+                CLOSE: 'modal:close',
+                BEFORE_OPEN: 'modal:before:open',
+                BEFORE_CLOSE: 'modal:before:close',
+                AJAX_SEND: 'modal:ajax:send',
+                AJAX_SUCCESS: 'modal:ajax:success',
+                AJAX_ERROR: 'modal:ajax:error',
+                AJAX_COMPLETE: 'modal:ajax:complete'
+            };
+
+            $.fn.modal = function(opts) {
+                this.each(function() {
+                    $(this).modal = new Modal($(this), opts);
+                });
+                return this;
+            };
+
+            $.modal.defaults = Modal.defaults;
+            $.modal.events = Modal.events;
+
+            return Modal;
+            
+        }));
+    </script>
+    <script>
+        $('#btn1').modal({
+            width: 300
+        });
+
+        $('#btn2').modal({
+            width: 300
+        });
+    </script>
+</body>
+</html>
