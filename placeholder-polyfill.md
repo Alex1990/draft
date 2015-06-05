@@ -89,3 +89,24 @@ Placeholder polyfill
 
 - `input:search`有自己默认的 UI，可以去掉。
 
+- 使用`input.type`来改变`type`属性时，在IE6-8（包括改变文档模式来模拟的）中会报错；使用`input.setAttribute()`时，在IE6/IE8/IE7(in IE8)中会报错，在IE9+模拟的IE7/8中不会报错。注：IE10是根据网上反应，IE11未测。
+
+- 光标位置问题：可以使用选区API
+
+- 如果焦点元素在一个`iframe`，且跨域了，则`document.activeElement`在IE8/9中会抛出`"unspecified error"`。参考：
+
+  - https://github.com/jquery/jquery-mobile/issues/2064
+  - https://github.com/mathiasbynens/jquery-placeholder/pull/99
+
+- 恢复到未调用插件状态，比如`$(':input').placeholder('destroy')`
+
+- Opera Mini 中测试支持`placeholder`，但是实际上不存在，参考：https://github.com/mathiasbynens/jquery-placeholder/pull/130
+
+- https://github.com/aralejs/placeholder/issues/4
+
+- IE点击`<a href="javascript:;"></a>`触发`onbeforeunload`事件影响：https://github.com/mathiasbynens/jquery-placeholder/issues/121
+
+- IE中，如果输入框有输入（包括空字符串），则刷新页面，输入框内容保留。
+
+  如果焦点在某个输入框内，则刷新页面后会触发该输入框的`blur`事件，
+
