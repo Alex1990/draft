@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Cross Browser Placeholder Test</title>
+    <style>
+        body {
+            font-size: 16px;
+        }
+        .register .field {
+            position: relative;
+        }
+        .register .field label {
+            display: inline-block;
+            width: 100px;
+        }
+        .register .field input {
+            width: 200px;
+            margin: 0;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            outline: none;
+        }
+        .register .field textarea {
+            margin: 0;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            overflow: auto;
+            outline: none;
+        }
+        .register .field input:hover,
+        .register .field textarea:hover {
+            border-color: #aaa;
+        }
+        .register .field input:focus,
+        .register .field textarea:focus {
+            border-color: #0af;
+        }
+        .register .field .placeholder {
+/*            position: absolute;
+            display: inline-block;
+            padding: 5px 10px;
+            top: 0;
+            left: 101px;
+*/            color: #aaa;
+        }
+        .register .field .msg {
+            margin-left: 101px;
+        }
+        .register .field .hint,
+        .register .field .error,
+        .register .field .success {
+            display: none;
+            font-size: 14px;
+        }
+        .register .field .hint {
+            color: #37c;
+        }
+        .register .field .error {
+            color: #d55;
+        }
+        .register .field .success {
+            color: #5a5;
+        }
+        .register .field .clear-btn {
+            position: absolute;
+            top: 3px;
+            left: 300px;
+            width: 20px;
+            height: 20px;
+            font-size: 16px;
+            line-height: 20px;
+            text-align: center;
+            border: 0;
+            background: #eee;
+            cursor: pointer;
+            outline: 0;
+        }
+        .register .field .clear-btn:focus {
+            /*outline: 0;*/
+        }
+        .register .field-submit input {
+            padding: 0;
+            height: 28px;
+            line-height: 28px;
+            background-color: #eee;
+            border: 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <form action="" id="register" class="register">
+        <div class="field field-username">
+            <p><label for="username">Username: </label><input type="text" class="clear-box" name="username" id="username" placeholder="Username"></p>
+            <div class="msg">
+                <span class="hint">6-20 length letter, digit or underline</span>
+                <span class="error error-empty">Please input username</span>
+                <span class="error error-format">6-20 length letter, digit or underline</span>
+                <span class="success">Done</span>
+            </div>
+        </div>
+        <div class="field field-password">
+            <p><label for="password">Password: </label><input type="password" class="clear-box" name="password" id="password" placeholder="Password"></p>
+            <div class="msg">
+                <span class="hint">6-20 length characters</span>
+                <span class="error error-empty">Please input password</span>
+                <span class="error error-format">6-20 length characters</span>
+                <span class="success">Done</span>
+            </div>
+        </div>
+        <div class="field field-description">
+            <p><label for="description">Description: </label><textarea name="description" id="description" cols="30" rows="10" placeholder="Type some text"></textarea></p>
+        </div>
+        <div class="field field-submit">
+            <p><input type="submit" id="submit" value="Sign Up"></p>
+        </div>
+    </form>    
+
+    <script src="http://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
+    <script src="/web/jquery-placeholder/jquery.placeholder.js"></script>
+    <script>
+        !(function() {
+
+            $.fn.bindInput = function(callback) {
+                return this.each(function(){
+                    bindInput(this, callback);
+                });
+            };
+
+            function bindInput(node, callback) {
+                var doc = document;
+
+                // IE10+及其他现代浏览器使用 input 事件，IE6-9使用 onpropertychange
+                var isInputSupported = ('oninput' in node) &&
+                                    (!('documentMode' in doc) || doc.documentMode > 9);
+
+                var inputValue = node.value;
+
+                var addEvent = function(elem, type, listener) {
+                    elem.attachEvent('on' + type, listener);
+                };
+                var removeEvent = function(elem, type, listener) {
+                    elem.detachEvent('on' + type, listener);
+                };
+
+                if (isInputSupported) {
+                    node.addEventListener('input', callback, false);
+                } else {
+                    var inputHandler = function(e) {
+                        if (node.value !== inputValue) {
+                            inputValue = node.value;
+                            callback.call(node, e);
+                        }
+                    };
+
+                    var propertychangeHandler = function(e) {
+                        if (e.propertyName === 'value') {
+                            inputHandler.call(node, e);
+                        }
+                    };
+                    addEvent(node, 'propertychange', propertychangeHandler);
+
+                    var focusHandler = function(e) {
+                        if (e.type === 'focus') {
+                            addEvent(doc, 'selectionchange', inputHandler);
+                        } else {
+                            removeEvent(doc, 'selectionchange', inputHandler);
+                        }
+                    };
+                    addEvent(node, 'focus', focusHandler);
+                    addEvent(node, 'blur', focusHandler);
+                    addEvent(node, 'keyup', inputHandler);
+                    addEvent(node, 'keydown', inputHandler);
+                }
+            };
+
+        })();
+
+        $(function() {
+
+            function safeActiveElement() {
+                try {
+                    return document.activeElement;
+                } catch(e){}
+            }
+
+            $.fn.clearButton = function(opts) {
+                this.each(function() {
+                    var $this = $(this);
+                    var $btn = $('<button class="clear-btn" type="button" tabindex="-1">&times;</button>');
+
+                    $btn.insertAfter($this);
+
+                    var toggleBtn = function(e) {
+                        $btn.toggle($this.val() !== '');
+                    };
+
+                    toggleBtn();
+
+                    $btn.mousedown(function() {
+                        $this.data('clearbtn-flag', true);
+                        $this.val('').focus();
+                    });
+
+                    $this.focus(toggleBtn)
+                        .blur(function(e) {
+                            if ($this.data('clearbtn-flag')) {
+                                e.stopImmediatePropagation();
+                                $this.data('clearbtn-flag', false).focus();
+                            }
+                        })
+                        .bindInput(toggleBtn);
+                });
+            };
+
+            $('.clear-box').clearButton();
+
+        });
+
+        // placeholder - input event
+        $(function() {
+
+            var isSupportPlaceholder = 'placeholder' in document.createElement('input');
+
+            $.fn.placeholder2 = function(opts) {
+                if (isSupportPlaceholder) return;
+
+                this.each(function() {
+                    var $this = $(this);
+                    var $holder = $('<span class="placeholder"></span>');
+                    var text = $this.attr('placeholder');
+
+                    $holder.text(text);
+                    $holder.insertAfter($this);
+
+                    var toggleHolder = function() {
+                        if ($this.val() !== '') {
+                            $holder.hide();
+                        } else {
+                            $holder.show();
+                        }
+                    };
+
+                    toggleHolder();
+
+                    $this.bindInput(toggleHolder);
+
+                    $holder.mousedown(function() {
+                        $this.data('mousedown', true);
+                        $this.focus();
+                    });
+
+                    $this.blur(function() {
+                        if ($this.data('mousedown')) {
+                            $this.focus();
+                            $this.data('mousedown', false);
+                        }
+                    });
+                });
+            }
+
+        });
+
+        $(function() {
+
+            var defaults = {
+                rules: {}
+            };
+
+            $.fn.validate = function(opts) {
+                opts = $.extend({}, defaults, opts);
+
+                var rules = opts.rules;
+                var $form = this.eq(0);
+
+                $.each(rules, function(name, rule) {
+                    var $fieldInput = $form.find('[name="' + name + '"]');
+                    var $field = $fieldInput.closest('.field');
+                    var $hint = $field.find(opts.hint);
+                    var $errors = $field.find(opts.error);
+                    var $success = $field.find(opts.success);
+
+                    $fieldInput.focus(function() {
+                        opts.onhint.call($field);
+                    }).bind('blur.validate', function() {
+                        $hint.hide();
+                        $errors.hide();
+                        $success.hide();
+
+                        var val = $fieldInput.val();
+                        var msgType;
+
+                        if ($.isFunction(rule)) {
+                            rule = {
+                                validate: rule
+                            };
+                        }
+
+                        if (rule.async) {
+                            rule.validate.call($fieldInput, val, new $.Deferred())
+                                .done($.proxy(opts.onsuccess, $field))
+                                .fail($.proxy(opts.onerror, $field));
+                        } else {
+                            msgType = rule.validate.call($fieldInput, val);
+                            if (msgType) {
+                                opts.onerror.call($field, msgType);
+                            } else {
+                                opts.onsuccess.call($field);
+                            }
+                        }
+                    });
+                });
+            };
+        });
+
+        $(function() {
+
+            $(':input[placeholder]').placeholder();
+
+            var $regForm = $('#register');
+            var opts = {
+                hint: 'span.hint',
+                error: 'span.error',
+                success: 'span.success',
+                onhint: function() {
+                    this.find(opts.hint).show();
+                    this.find(opts.error).hide();
+                    this.find(opts.success).hide();
+                },
+                onsuccess: function() {
+                    this.removeClass('has-error');
+                    this.find(opts.hint).hide();
+                    this.find(opts.error).hide();
+                    this.find(opts.success).show();
+                },
+                onerror: function(msgType) {
+                    this.addClass('has-error');
+                    this.find(opts.hint).hide();
+                    this.find(opts.error).hide().filter('.error-' + msgType).show();
+                    this.find(opts.success).hide();
+                },
+                rules: {
+                    username: function(val) {
+                        if (val === '') return 'empty';
+
+                        if (!/^[a-zA-Z0-9]{6,20}$/.test(val)) {
+                            return 'format';
+                        }
+                    },
+                    password: function(val) {
+                        if (val === '') return 'empty';
+
+                        if (!/^[\s\S]{6,20}$/.test(val)) {
+                            return 'format';
+                        }
+                    }
+                }
+            };
+
+            $regForm.validate(opts);
+
+            $regForm.submit(function(e) {
+                console.log('submit 1');
+                e.preventDefault();
+
+                $regForm.find(':input').trigger('blur');
+
+                if ($regForm.find('.has-error').length === 0) {
+                    console.log('registering');
+                    $.ajax({
+                        url: '',
+                        type: 'POST',
+                        data: $regForm.serialize(),
+                        timeout: 60000,
+                        beforeSend: function() {
+                        },
+                        success: function() {
+                        },
+                        error: function() {
+                        }
+                    });
+                }
+                console.log('submit 1 end');
+            });
+        });
+    </script>
+</body>
+</html>
