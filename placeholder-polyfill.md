@@ -110,3 +110,5 @@ Placeholder polyfill
 
   如果焦点在某个输入框内，则刷新页面后会触发该输入框的`blur`事件，
 
+- 使用jquery-placeholder将`input:password`替换为`input:text`的方式，要注意两者的高度在IE11模拟的IE7-9中不同，可使用CSS显式设置高度。
+
