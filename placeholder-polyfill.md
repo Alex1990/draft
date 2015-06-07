@@ -112,3 +112,5 @@ Placeholder polyfill
 
 - 使用jquery-placeholder将`input:password`替换为`input:text`的方式，要注意两者的高度在IE11模拟的IE7-9中不同，可使用CSS显式设置高度。
 
+- 目前的jquery-placeholder在IE6-9中需要JS加载好之后才能显示placeholder，当然可以改成加载好CSS后就生效，但是还是采用目前的吧，较少依赖CSS与HTML设置。
+
