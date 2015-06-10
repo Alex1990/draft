@@ -114,4 +114,6 @@ Placeholder polyfill
 
 - 目前的jquery-placeholder在IE6-9中需要JS加载好之后才能显示placeholder，当然可以改成加载好CSS后就生效，但是还是采用目前的吧，较少依赖CSS与HTML设置。
 
-- form 的`reset`事件会清除所有表单元素的内容。
+- form 的`reset`事件会清除所有表单元素的内容
+
+- 假如要为密码框添加那种眼睛图标用来切换密码显示为黑点还是明文功能，如何处理
