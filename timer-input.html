@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <form action="">
+        <input type="text" id="word">
+        <input type="text">
+    </form>
+
+    <script>
+        var global = window;
+        var NativeCustomEvent = global.CustomEvent;
+        var descriptor = Object.getOwnPropertyDescriptor;
+        var defineProp = Object.defineProperty;
+
+        function addEvent(elem, type, listener) {
+          if (elem.addEventListener) {
+            elem.addEventListener(type, listener, false);
+          } else if (elem.attachEvent) {
+            elem['on' + type] = listener;
+            elem.attachEvent('on' + type, elem['on' + type]);
+          }
+        }
+
+        function removeEvent(elem, type, listener) {
+          if (elem.removeEventListener) {
+            elem.removeEventListener(type, listener, false);
+          } else if (elem.detachEvent) {
+            elem.detachEvent('on' + type, elem['on' + type]);
+          }
+        }
+
+        function isCustomEvent() {
+          try {
+            var p = new NativeCustomEvent('cat', { detail: { foo: 'bar' } });
+            return p.type === 'cat' && p.detail.foo === 'bar';
+          } catch (e) {
+          }
+          return false;
+        }
+
+        if (!isCustomEvent()) {
+
+          // IE >= 9
+          if (typeof document.createEvent === 'function') {
+            global.CustomEvent = function (type, params) {
+              var e = document.createEvent('CustomEvent');
+              if (params) {
+                e.initCustomEvent(type, params.bubbles, params.cancelable, params.detail);
+              } else {
+                e.initCustomEvent(type, false, false, void 0);
+              }
+              return e;
+            };
+          } else {
+            // IE6-8
+            global.CustomEvent = function (type, params) {
+              var e = document.createEventObject();
+              e.type = type;
+              if (params) {
+                e.bubbles = Boolean(params.bubbles);
+                e.cancelable = Boolean(params.cancelable);
+                e.detail = params.detail;
+              } else {
+                e.bubbles = false;
+                e.cancelable = false;
+                e.detail = void 0;
+              }
+              return e;
+            };
+          }
+        }
+
+        var eventName = 'txtinput';
+
+        var triggerInput = function (elem) {
+          var inputEvent = new CustomEvent(eventName);
+          if (isCustomEvent() || (typeof document.createEvent === 'function')) {
+            elem.dispatchEvent(inputEvent);
+          } else if (elem.attachEvent) {
+            if (!elem[eventName]) {
+              elem[eventName] = 1;
+              elem.attachEvent('onpropertychange', function(e) {
+                if (e.propertyName === eventName) {
+                  elem['on' + eventName] && elem['on' + eventName](inputEvent);
+                }
+              });
+            }
+            elem[eventName]++;
+          }
+        };
+
+        function TxtInput(elem) {
+          this.elem = elem;
+          this.originalValue = elem.value;
+
+          var that = this;
+
+          if (descriptor && defineProp) {
+            var valueProp = that.valueProp = descriptor(elem.constructor.prototype, 'value');
+
+            defineProp(elem, 'value', {
+              get: function() {
+                return valueProp.get.call(this);
+              },
+              set: function(val) {
+                if (that.originalValue !== val) {
+                  that.originalValue = val;
+                  triggerInput(elem);
+                }
+                return valueProp.set.call(this, val);
+              }
+            });
+          }
+
+          that.onFocusChange = function(e) {
+            e = e || window.event;
+            if (e.type === 'focus') {
+              that.timerId = setInterval(function() {
+                if (that.originalValue != elem.value) {
+                  that.originalValue = elem.value;
+                  triggerInput(elem);
+                }
+              }, 1000/60);
+            } else {
+              setTimeout(function() {
+                clearInterval(that.timerId);
+              }, 0);
+            }
+          };
+          addEvent(elem, 'focus', that.onFocusChange);
+          addEvent(elem, 'blur', that.onFocusChange);
+        };
+
+        TxtInput.prototype.on = function(listener) {
+          addEvent(this.elem, eventName, listener);
+        };
+
+        TxtInput.prototype.off = function(listener) {
+          removeEvent(this.elem, eventName, listener);
+        };
+
+        TxtInput.prototype.destroy = function() {
+          var elem = this.elem;
+          var valueProp = this.valueProp;
+
+          removeEvent(elem, 'focus', this.onFocusChange);
+          removeEvent(elem, 'blur', this.onFocusChange);
+
+          if (descriptor && defineProp) {
+            defineProp(elem, 'value', {
+              get: valueProp.get,
+              set: valueProp.set
+            });
+          }
+        };
+    </script>
+    <script>
+        var word = document.getElementById('word');
+
+        var wordInput = new TxtInput(word);
+
+        wordInput.on(function(e) {
+            console.log(e.type);
+        });
+    </script>
+</body>
+</html>
