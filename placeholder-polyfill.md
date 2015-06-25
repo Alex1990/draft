@@ -122,3 +122,5 @@ Placeholder polyfill
 
 - 提供阻止显示`placeholder`的判断的设置，利用`jQuery.data()`？
 
+- placeholder文本内容超过文本框的宽度时自动截断
+
