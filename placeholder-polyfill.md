@@ -3,6 +3,11 @@ Placeholder polyfill
 
 规范：[https://html.spec.whatwg.org/multipage/forms.html#attr-input-placeholder](https://html.spec.whatwg.org/multipage/forms.html#attr-input-placeholder)
 
+开源参考：
+
+- https://github.com/jamesallardice/Placeholders.js
+- https://github.com/mathiasbynens/jquery-placeholder
+
 通常有两种解决方法：`value`属性模拟和其他标签模拟
 
 ## 要解决的问题
