@@ -129,3 +129,8 @@ Placeholder polyfill
 
 - placeholder文本内容超过文本框的宽度时自动截断
 
+- 使用标签技术时，Chrome里面记住账户与密码功能会出现问题：
+
+  - 首先placeholder显示，然后浏览器将账户与密码填充进入，然后才执行到JS根据文本框的`value`决定是否显示placeholder，当然可以先让placeholder隐藏，然后JS将其显示出来，这样不会看到placeholder先显示再隐藏那样闪烁一次。
+  - 另外一个问题是，输入URL进入页面（即非刷新）时，密码框虽然被自动填充了，但是其`value`值为空，手动点页面任意位置才会正确，当然脚本触发`click`或者密码框的`focus`都不管用。火狐和360没有这个问题。
+
