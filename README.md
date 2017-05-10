@@ -12,7 +12,7 @@ My first repository, to learn how to use git and github.
 |**`alias`**|`{Object}`|`{}`|Create aliases to import certain modules more easily|
 |**`import`** |`{Boolean}`|`true`| Enable/Disable @import handling|
 |**`modules`**|`{Boolean}`|`false`|Enable/Disable CSS Modules|
-|**`minimize`**|``{Boolean`|Object}``|`false`|Enable/Disable minification|
+|**`minimize`**|<code>{Boolean&verbar;Object}</code>|`false`|Enable/Disable minification|
 |**`sourceMap`**|`{Boolean}`|`false`|Enable/Disable Sourcemaps|
 |**`camelCase`**|``{Boolean`|String}``|`false`|Export Classnames in CamelCase|
 |**`importLoaders`**|`{Number}`&verbar;`0`|Number of loaders applied before CSS loader|
